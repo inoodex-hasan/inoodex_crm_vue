@@ -1,0 +1,161 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Application;
+use App\Models\MarketingDocument;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class MarketingDocumentController extends Controller
+{
+    public function index(Request $request)
+    {
+        // If application_id is provided, show edit form for that application
+        if ($request->filled('application_id')) {
+            $applications = Application::with('student')
+                ->orderBy('created_at', 'desc')
+                ->get(['id', 'application_id', 'student_id']);
+
+            $selectedApplication = Application::with('student')->find($request->application_id);
+            $documents = [];
+
+            // Get or create document records for each type
+            $docTypes = ['sop', 'cv', 'cl'];
+            foreach ($docTypes as $type) {
+                $doc = MarketingDocument::firstOrCreate(
+                    [
+                        'application_id' => $request->application_id,
+                        'document_type' => $type,
+                    ],
+                    [
+                        'document_name' => strtoupper($type),
+                        'status' => 'not_received',
+                        'created_by' => auth()->id(),
+                    ]
+                );
+                $documents[$type] = $doc;
+            }
+
+            return Inertia::render('Marketing/Documents/Index', [
+                'allApplications' => $applications,
+                'selectedApplication' => $selectedApplication,
+                'documents' => $documents,
+                'applications' => ['data' => []],
+                'filters' => $request->only(['search', 'sop_status', 'cv_status', 'cl_status', 'vfs_date']),
+            ]);
+        }
+
+        // Otherwise, show list of all applications with their document statuses
+        $query = Application::with(['student', 'documents']);
+
+        // Search by application ID or student name
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('application_id', 'like', '%' . $search . '%')
+                  ->orWhereHas('student', function($sq) use ($search) {
+                      $sq->where('first_name', 'like', '%' . $search . '%')
+                         ->orWhere('last_name', 'like', '%' . $search . '%')
+                         ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ['%' . $search . '%']);
+                  });
+            });
+        }
+
+        // Filter by document status
+        if ($request->filled('sop_status')) {
+            $query->whereHas('documents', function($q) use ($request) {
+                $q->where('document_type', 'sop')->where('status', $request->sop_status);
+            });
+        }
+        if ($request->filled('cv_status')) {
+            $query->whereHas('documents', function($q) use ($request) {
+                $q->where('document_type', 'cv')->where('status', $request->cv_status);
+            });
+        }
+        if ($request->filled('cl_status')) {
+            $query->whereHas('documents', function($q) use ($request) {
+                $q->where('document_type', 'cl')->where('status', $request->cl_status);
+            });
+        }
+        
+        // Filter by VFS appointment date
+        if ($request->filled('vfs_date')) {
+            $query->whereDate('vfs_appointment_date', $request->vfs_date);
+        }
+
+        // Group applications by VFS appointment date
+        // Logic: 
+        // 1. Applications with upcoming/overdue VFS dates and INCOMPLETE documents first
+        // 2. Applications with no VFS date
+        // 3. Fully completed applications (all submitted) at the very bottom
+        $applications = $query->get()->map(function($app) {
+            $docs = $app->documents->pluck('status', 'document_type')->toArray();
+            $docTypes = ['sop', 'cv', 'cl'];
+            $isComplete = true;
+            foreach ($docTypes as $type) {
+                if (!isset($docs[$type]) || $docs[$type] !== 'submitted') {
+                    $isComplete = false;
+                    break;
+                }
+            }
+            $app->is_fully_submitted = $isComplete;
+            return $app;
+        })->sort(function($a, $b) {
+            // Priority 1: Incomplete vs Complete
+            if ($a->is_fully_submitted !== $b->is_fully_submitted) {
+                return $a->is_fully_submitted ? 1 : -1;
+            }
+
+            // Priority 2: VFS Date (NULLs to the middle, after incomplete with dates)
+            if ($a->vfs_appointment_date === null && $b->vfs_appointment_date !== null) return 1;
+            if ($a->vfs_appointment_date !== null && $b->vfs_appointment_date === null) return -1;
+            
+            return strcmp($a->vfs_appointment_date, $b->vfs_appointment_date);
+        });
+
+        // Re-paginate the sorted collection
+        $perPage = 20;
+        $page = $request->get('page', 1);
+        $paginatedItems = $applications->forPage($page, $perPage);
+        $applications = new \Illuminate\Pagination\LengthAwarePaginator(
+            $paginatedItems,
+            $applications->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return Inertia::render('Marketing/Documents/Index', [
+            'applications' => $applications,
+            'filters' => $request->only(['search', 'sop_status', 'cv_status', 'cl_status', 'vfs_date']),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'application_id' => 'required|exists:applications,id',
+            'documents' => 'required|array',
+            'documents.*.status' => 'required|in:pending,received,not_received,ready,submitted',
+        ]);
+
+        foreach ($validated['documents'] as $type => $data) {
+            MarketingDocument::updateOrCreate(
+                [
+                    'application_id' => $validated['application_id'],
+                    'document_type' => $type,
+                ],
+                [
+                    'document_name' => strtoupper($type),
+                    'status' => $data['status'],
+                    'created_by' => auth()->id(),
+                ]
+            );
+        }
+
+        return redirect()->route('admin.marketing.documents.index')
+            ->with('success', 'Document statuses updated successfully.');
+    }
+}

@@ -1,0 +1,215 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.vue';
+
+@theme {
+    --font-sans: 'Nunito', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --color-primary: #4361ee;
+    --color-primary-light: #eaf1ff;
+    --color-secondary: #805dca;
+    --color-success: #00ab55;
+    --color-danger: #e7515a;
+    --color-warning: #e2a03f;
+    --color-info: #2196f3;
+    --color-dark: #3b3f5c;
+    --color-white-light: #e0e6ed;
+    --color-white-dark: #888ea8;
+}
+
+/* Vristo Card Panels */
+.panel {
+    position: relative;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    padding: 1.25rem;
+    border: 1px solid #e0e6ed;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+}
+
+.panel:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+}
+
+.dark .panel {
+    background-color: #0e1726;
+    border-color: #1b2e4b;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.dark .panel:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+
+/* Vristo Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    letter-spacing: 0.025em;
+}
+
+/* Vristo Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.75rem;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #4361ee;
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: #324ed9;
+}
+
+.btn-outline-primary {
+    border: 1px solid #4361ee;
+    color: #4361ee;
+    background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: #4361ee;
+    color: #ffffff;
+}
+
+/* Table Hover & Visibility */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table thead th {
+    color: #0e1726 !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 0.85rem 1rem !important;
+    background-color: #f6f8fa !important;
+    border-bottom: 2px solid #e0e6ed !important;
+    white-space: nowrap;
+}
+
+.dark table thead th {
+    color: #f8fafc !important;
+    background-color: #1a2941 !important;
+    border-bottom: 2px solid #1b2e4b !important;
+}
+
+table tbody td {
+    padding: 0.85rem 1rem;
+    color: #1e293b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f7;
+}
+
+.dark table tbody td {
+    color: #e2e8f0;
+    border-bottom: 1px solid #191e3a;
+}
+
+table tbody tr {
+    transition: background-color 0.15s ease-in-out;
+}
+
+table.table-hover tbody tr:hover, table tbody tr:hover {
+    background-color: rgba(67, 97, 238, 0.04) !important;
+}
+
+.dark table.table-hover tbody tr:hover, .dark table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.form-input {
+    border-radius: 0.375rem;
+    border: 1px solid #e0e6ed;
+    background-color: #ffffff;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.875rem;
+    color: #0e1726;
+    outline: none;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.form-select {
+    border-radius: 0.375rem;
+    border: 1px solid #e0e6ed;
+    background-color: #ffffff;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.85rem;
+    padding-right: 2.5rem !important;
+    font-size: 0.875rem;
+    color: #0e1726;
+    outline: none;
+    transition: border-color 0.15s ease-in-out;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.15em 1.15em;
+    cursor: pointer;
+}
+
+[dir="rtl"] .form-select {
+    padding-left: 2.5rem !important;
+    padding-right: 0.85rem !important;
+    background-position: left 0.75rem center;
+}
+
+.form-select.w-auto, select.form-select.w-auto {
+    width: auto !important;
+    max-width: fit-content !important;
+}
+
+.form-input:focus, .form-select:focus {
+    border-color: #4361ee;
+}
+
+.dark .form-input {
+    border-color: #1b2e4b;
+    background-color: #121e32;
+    color: #cbd5e1;
+}
+
+.dark .form-select {
+    border-color: #1b2e4b;
+    background-color: #121e32;
+    color: #cbd5e1;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23888ea8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+}
+
+.dark .form-input:focus, .dark .form-select:focus {
+    border-color: #4361ee;
+}
+
